@@ -1,3 +1,4 @@
+<!-- templates/base.html -->
 <!DOCTYPE html>
 <html>
 <head>
@@ -7,14 +8,35 @@
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container">
-            <a class="navbar-brand" href="/">Learning Platform</a>
-            <!-- Add navigation links -->
+            <a class="navbar-brand" href="#">Learning Platform</a>
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav ms-auto">
+                    {% if user.is_authenticated and user.role == 'STUDENT' %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'users:learner_dashboard' %}">Dashboard</a>
+                        </li>
+
+                        <li class="nav-item">
+                            <form action="{% url 'users:logout' %}" method="post" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-link nav-link">Logout</button>
+                            </form>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'users:login' %}">Login</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'users:signup' %}">Sign Up</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
         </div>
     </nav>
     <div class="container mt-4">
         {% block content %}{% endblock %}
     </div>
-
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

@@ -1,6 +1,39 @@
-from django.shortcuts import render,redirect
+from django.shortcuts import render,redirect, get_object_or_404
 from django.http import HttpResponse
+from .models import Quiz
+from courses.models import UserProgress
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
 
 # Create your views here.
-def index(request):
-    return HttpResponse("you're in quizzes: index page")
+
+
+
+@login_required
+def take_quiz(request, quiz_id):
+    quiz = get_object_or_404(Quiz, id=quiz_id)
+    questions = quiz.question_set.prefetch_related('answer_set').all()
+    
+    if request.method == 'POST':
+        score = 0
+        total_questions = questions.count()
+        
+        for question in questions:
+            selected_answer = request.POST.get(f'question_{question.id}')
+            if selected_answer:
+                correct_answer = question.answer_set.filter(is_correct=True).first()
+                if str(correct_answer.id) == selected_answer:
+                    score += 1
+        
+        # Save quiz result
+        UserProgress.objects.update_or_create(
+            user=request.user,
+            lesson=quiz.lesson,
+            defaults={'score': (score/total_questions)*100}
+        )
+        
+        messages.success(request, f"Quiz completed! Score: {score}/{total_questions}")
+        return redirect('lesson_view', lesson_id=quiz.lesson.id)
+    
+    context = {'quiz': quiz, 'questions': questions}
+    return render(request, 'quizzes/take_quiz.html', context)

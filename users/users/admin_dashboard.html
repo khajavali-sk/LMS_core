@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>SuperAdmin Dashboard</h2>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Username</th>
+                <th>Role</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in users %}
+            <tr>
+                <td>{{ user.username }}</td>
+                <td>{{ user.role }}</td>
+                <td>
+                    {% if user.role == 'STUDENT' %}
+                        <a href="{% url 'users:promote_user' user.id %}" class="btn btn-sm btn-success">Promote to ClubAdmin</a>
+                    {% elif user.role == 'CLUBADMIN' %}
+                        <a href="{% url 'users:demote_user' user.id %}" class="btn btn-sm btn-danger">Demote to Student</a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

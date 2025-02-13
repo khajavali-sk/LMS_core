@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>{{ lesson.title }}</h1>
+
+    <!-- Optional Video Embed -->
+    {% if lesson.video_url %}
+        <div class="embed-responsive embed-responsive-16by9 mb-3">
+            <iframe class="embed-responsive-item" src="{{ lesson.video_url }}" allowfullscreen></iframe>
+        </div>
+    {% endif %}
+
+    <!-- Lesson Content -->
+    <div class="lesson-content mb-4">
+        {{ lesson.content|safe }}
+    </div>
+
+    <!-- Navigation Back to Course -->
+    <a href="{% url 'courses:course_detail' lesson.module.course.id %}" class="btn btn-secondary">Back to Course</a>
+</div>
+{% endblock %}

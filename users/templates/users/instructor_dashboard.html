@@ -1,0 +1,175 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid instructor-dashboard">
+    <!-- Header Section -->
+    <div class="dashboard-header bg-gradient-dark text-white py-5">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h1 class="display-5 mb-3">Instructor Dashboard</h1>
+                    <div class="stats-container">
+                        <div class="stat-item">
+                            <div class="stat-number">{{ total_courses }}</div>
+                            <div class="stat-label">Courses</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">{{ total_students }}</div>
+                            <div class="stat-label">Students</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">{{ average_rating }}</div>
+                            <div class="stat-label">Avg Rating</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 text-center">
+                    <div class="quick-actions">
+                        <a href="{% url 'courses:create_course' %}" class="btn btn-light btn-lg">
+                            <i class="fas fa-plus me-2"></i> New Course
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container py-5">
+        <!-- Course Management -->
+        <section class="mb-5">
+            <h3 class="section-title mb-4">Your Courses</h3>
+            <div class="row row-cols-1 row-cols-lg-2 g-4">
+                {% for course in courses %}
+                <div class="col">
+                    <div class="course-management-card">
+                        <div class="course-header">
+                            <img src="{{ course.thumbnail.url }}" alt="{{ course.title }}">
+                            <div class="course-status">
+                                <span class="badge {% if course.is_published %}bg-success{% else %}bg-warning{% endif %}">
+                                    {% if course.is_published %}Published{% else %}Draft{% endif %}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="course-body">
+                            <h5 class="course-title">{{ course.title }}</h5>
+                            <div class="course-stats">
+                                <div class="stat">
+                                    <i class="fas fa-users"></i>
+                                    {{ course.enrollment_set.count }} students
+                                </div>
+                                <div class="stat">
+                                    <i class="fas fa-percent"></i>
+                                    {{ course.average_progress }}% completion
+                                </div>
+                            </div>
+                            <div class="course-actions">
+                                <a href="{% url 'courses:course_analytics' course.id %}" class="btn btn-sm btn-info">
+                                    <i class="fas fa-chart-line"></i> Analytics
+                                </a>
+                                <a href="{% url 'courses:edit_course' course.id %}" class="btn btn-sm btn-secondary">
+                                    <i class="fas fa-edit"></i> Edit
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-12">
+                    <div class="empty-state text-center py-5">
+                        <i class="fas fa-chalkboard-teacher fa-4x text-muted mb-4"></i>
+                        <h4>No Courses Created Yet</h4>
+                        <p class="text-muted">Start by creating your first course</p>
+                        <a href="{% url 'courses:create_course' %}" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i> Create Course
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+
+        <!-- Quick Stats -->
+        <section class="mb-5">
+            <h3 class="section-title mb-4">Performance Overview</h3>
+            <div class="row">
+                <div class="col-md-6 mb-4">
+                    <div class="stats-card bg-primary text-white">
+                        <h5><i class="fas fa-tachometer-alt"></i> Engagement Rate</h5>
+                        <div class="stat-number">{{ engagement_rate }}%</div>
+                        <div class="stat-comparison">
+                            {% if engagement_trend == 'up' %}
+                            <span class="text-success"><i class="fas fa-arrow-up"></i> {{ engagement_change }}%</span>
+                            {% else %}
+                            <span class="text-danger"><i class="fas fa-arrow-down"></i> {{ engagement_change }}%</span>
+                            {% endif %} from last month
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-4">
+                    <div class="stats-card bg-success text-white">
+                        <h5><i class="fas fa-comments"></i> Student Satisfaction</h5>
+                        <div class="stat-number">{{ average_rating }}/5</div>
+                        <div class="reviews-preview">
+                            {% for review in recent_reviews %}
+                            <div class="review-item">
+                                "{{ review.comment|truncatechars:40 }}"
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.instructor-dashboard {
+    background: #f8f9fa;
+}
+
+.dashboard-header {
+    background: linear-gradient(135deg, #2d3748, #4a5568);
+}
+
+.course-management-card {
+    background: white;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.course-header {
+    position: relative;
+    height: 180px;
+}
+
+.course-header img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.course-status {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+}
+
+.stats-card {
+    padding: 2rem;
+    border-radius: 15px;
+    min-height: 200px;
+}
+
+.stat-number {
+    font-size: 2.5rem;
+    font-weight: bold;
+    margin: 1rem 0;
+}
+</style>
+{% endblock %}

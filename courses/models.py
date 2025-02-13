@@ -55,3 +55,29 @@ class UserProgress(models.Model):
     lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE)
     completed_at = models.DateTimeField(auto_now_add=True)
     score = models.IntegerField(null=True, blank=True)
+
+    class Meta:
+        unique_together = ('user', 'lesson')  # Prevent duplicate entries
+
+    @staticmethod
+    def get_course_progress(user, course):
+        total_lessons = Lesson.objects.filter(module__course=course).count()
+        completed_lessons = UserProgress.objects.filter(user=user, lesson__module__course=course).count()
+
+        if total_lessons == 0:
+            return 0  # Avoid division by zero
+
+        return int((completed_lessons / total_lessons) * 100)  # Convert to percentage
+
+
+class Enrollment(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    course = models.ForeignKey(Course, on_delete=models.CASCADE)
+    enrolled_at = models.DateTimeField(auto_now_add=True)
+    is_paid = models.BooleanField(default=False)
+    
+    class Meta:
+        unique_together = ('user', 'course')
+    
+    def __str__(self):
+        return f"{self.user} in {self.course}"
