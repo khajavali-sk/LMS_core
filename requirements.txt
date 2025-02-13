@@ -1,0 +1,10 @@
+Django==4.2
+psycopg2-binary==2.9.9  # PostgreSQL support (change if using MySQL)
+gunicorn==21.2.0  # Production WSGI server
+whitenoise==6.6.0  # Serve static files in production
+dj-database-url==2.1.0  # Database URL parsing
+django-environ==0.11.2  # Environment variables support
+pillow==10.1.0  # Image processing (profile pictures)
+django-storages==1.14.2  # File storage (AWS S3, Google Cloud, etc.)
+boto3==1.34.23  # AWS SDK (if using S3)
+requests==2.31.0  # API calls (optional, useful for external integrations)
