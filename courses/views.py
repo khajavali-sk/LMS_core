@@ -6,8 +6,21 @@ from courses.models import Course, UserProgress
 from quizzes.models import Quiz
 from django.utils.timezone import now 
 from datetime import timedelta, timezone
-from django.db.models import Case, When, Value, IntegerField, Avg, Count, OuterRef, ExpressionWrapper, Subquery
+from django.db.models import Case, When, Value, IntegerField, Avg, Count, OuterRef, ExpressionWrapper, Subquery, Q
+from django.views.generic import CreateView, UpdateView
+from django.urls import reverse_lazy
+from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
+from .models import Course
+from django.shortcuts import render, get_object_or_404
+from django.contrib.auth.decorators import login_required
+from .models import *
+from .forms import ReviewForm
+from django.contrib import messages
+from .models import Course, Enrollment
 
+from django.core.paginator import Paginator
+from .models import Course, Category
 
 @login_required
 def enroll_course(request, course_id):
@@ -21,9 +34,7 @@ def enroll_course(request, course_id):
 
 
 
-from django.shortcuts import render
-from django.contrib.auth.decorators import login_required
-from .models import Course
+
 
 @login_required
 def home(request):
@@ -48,10 +59,7 @@ def home(request):
 
 
 
-# courses/views.py
-from django.shortcuts import render, get_object_or_404
-from django.contrib.auth.decorators import login_required
-from .models import Course, Lesson
+
 
 # @login_required
 # def course_detail(request, course_id):
@@ -63,8 +71,7 @@ from .models import Course, Lesson
 #     })
 
 
-from django.contrib import messages
-from .models import Course, Enrollment
+
 
 @login_required
 def course_detail(request, course_id):
@@ -163,3 +170,161 @@ def course_analytics(request, course_id):
         'progress_distribution': progress_data
     }
     return render(request, 'courses/course_analytics.html', context)
+
+
+
+
+class CourseCreateView(CreateView):
+    model = Course
+    fields = ['title', 'description', 'category', 'price', 'thumbnail']
+    template_name = 'courses/course_form.html'
+    
+    def form_valid(self, form):
+        form.instance.instructor = self.request.user
+        return super().form_valid(form)
+    
+    def get_success_url(self):
+        return reverse_lazy('courses:manage_course', kwargs={'pk': self.object.pk})
+
+class CourseUpdateView(UpdateView):
+    model = Course
+    fields = ['title', 'description', 'category', 'price', 'thumbnail', 'is_published']
+    template_name = 'courses/course_form.html'
+    
+    def get_success_url(self):
+        return reverse_lazy('courses:manage_course', kwargs={'pk': self.object.pk})
+
+def manage_course(request, pk):
+    course = get_object_or_404(Course, pk=pk, instructor=request.user)
+    modules = course.module_set.annotate(
+        lesson_count=Count('lesson')
+    ).order_by('order')
+    
+    if request.method == 'POST':
+        # Handle module/lesson ordering
+        pass
+    
+    return render(request, 'courses/manage_course.html', {
+        'course': course,
+        'modules': modules
+    })
+
+
+@login_required
+def track_progress(request, course_id):
+    course = get_object_or_404(Course, id=course_id)
+    progress = course.student_progress(request.user)
+    modules = course.module_set.annotate(
+        completed_lessons=Count(
+            'lesson__userprogress',
+            filter=Q(lesson__userprogress__user=request.user)
+    ))
+    
+    context = {
+        'course': course,
+        'progress': progress,
+        'modules': modules
+    }
+    return render(request, 'courses/progress_tracking.html', context)
+
+
+
+# courses/views.py
+@login_required
+def submit_review(request, course_id):
+    course = get_object_or_404(Course, id=course_id)
+    if not course.enrollment_set.filter(user=request.user).exists():
+        return HttpResponseForbidden("You must enroll first")
+    
+    review, created = Review.objects.get_or_create(
+        course=course,
+        user=request.user,
+        defaults={'rating': 5}
+    )
+    
+    if request.method == 'POST':
+        form = ReviewForm(request.POST, instance=review)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Review submitted successfully!")
+            return redirect('course_detail', course_id=course.id)
+    else:
+        form = ReviewForm(instance=review)
+    
+    return render(request, 'courses/review_form.html', {'form': form, 'course': course})
+
+
+
+# courses/views.py
+def landing_page(request):
+    featured_courses = Course.objects.filter(is_published=True).order_by('-created_at')[:6]
+    testimonials = Review.objects.select_related('user').order_by('-created_at')[:5]
+    
+    return render(request, 'landing.html', {
+        'featured_courses': featured_courses,
+        'testimonials': testimonials
+    })
+
+
+
+
+
+from django.shortcuts import render, get_object_or_404
+from django.core.paginator import Paginator
+from django.db.models import Count, Q
+from .models import Course, Category
+
+def course_list(request):
+    # Get all published courses
+    course_list = Course.objects.filter(is_published=True).annotate(
+        enrollment_count=Count('enrollment')
+    )  # Added missing parenthesis here
+
+    # Filter by category
+    category_slug = request.GET.get('category')
+    if category_slug:
+        category = get_object_or_404(Category, slug=category_slug)
+        course_list = course_list.filter(category=category)
+
+    # Search functionality
+    search_query = request.GET.get('q')
+    if search_query:
+        course_list = course_list.filter(
+            Q(title__icontains=search_query) |
+            Q(description__icontains=search_query)
+        )
+
+    # Pagination
+    paginator = Paginator(course_list, 9)  # 9 courses per page
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    # Get all categories for filter sidebar
+    categories = Category.objects.annotate(course_count=Count('course'))
+
+    # Get trending courses (most enrolled)
+    trending_courses = Course.objects.filter(is_published=True).annotate(
+        enrollment_count=Count('enrollment')
+    ).order_by('-enrollment_count')[:4]
+
+    context = {
+        'page_obj': page_obj,
+        'categories': categories,
+        'trending_courses': trending_courses,
+        'selected_category': category_slug,
+        'search_query': search_query or ''
+    }
+    return render(request, 'courses/course_list.html', context)
+
+
+from django.shortcuts import get_object_or_404
+from .models import Category, Course
+
+def category_view(request, slug):
+    category = get_object_or_404(Category, slug=slug)
+    courses = Course.objects.filter(category=category, is_published=True)
+    
+    return render(request, 'courses/category.html', {
+        'category': category,
+        'courses': courses
+    })

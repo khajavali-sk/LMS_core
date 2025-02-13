@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="quiz-header mb-4">
+        <h2>{{ quiz.title }}</h2>
+        <p class="lead">{{ quiz.lesson.module.course.title }}</p>
+        {% if results %}
+        <div class="alert alert-info">
+            Your Score: {{ request.session.quiz_score }}%
+        </div>
+        {% endif %}
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+        {% for question in questions %}
+        <div class="card mb-3 question-card">
+            <div class="card-body">
+                <h5 class="card-title">Question {{ forloop.counter }}</h5>
+                <p class="card-text">{{ question.text }}</p>
+                
+                <div class="answers-list">
+                    {% for answer in question.answer_set.all %}
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" 
+                               name="q_{{ question.id }}" 
+                               id="q{{ question.id }}_a{{ answer.id }}" 
+                               value="{{ answer.id }}"
+                               {% if results and results.forloop.parentloop.counter0.selected == answer.id|stringformat:"s" %}checked{% endif %}>
+                        <label class="form-check-label" for="q{{ question.id }}_a{{ answer.id }}">
+                            {{ answer.text }}
+                            {% if results %}
+                                {% if answer.is_correct %}
+                                <span class="text-success"><i class="fas fa-check"></i> Correct Answer</span>
+                                {% elif results.forloop.parentloop.counter0.selected == answer.id|stringformat:"s" %}
+                                <span class="text-danger"><i class="fas fa-times"></i> Your Answer</span>
+                                {% endif %}
+                            {% endif %}
+                        </label>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+        
+        {% if not results %}
+        <div class="text-center mt-4">
+            <button type="submit" class="btn btn-primary btn-lg">
+                <i class="fas fa-paper-plane"></i> Submit Quiz
+            </button>
+        </div>
+        {% else %}
+        <div class="text-center mt-4">
+            <a href="{% url 'courses:course_detail' quiz.lesson.module.course.id %}" 
+               class="btn btn-success">
+                Return to Course
+            </a>
+        </div>
+        {% endif %}
+    </form>
+</div>
+{% endblock %}

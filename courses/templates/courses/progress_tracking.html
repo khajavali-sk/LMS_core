@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="progress-header mb-5">
+        <h2>Your Progress in {{ course.title }}</h2>
+        <div class="overall-progress">
+            <div class="progress" style="height: 25px;">
+                <div class="progress-bar bg-success" 
+                     style="width: {{ progress.percentage }}%">
+                    {{ progress.percentage }}%
+                </div>
+            </div>
+            <small class="text-muted">
+                {{ progress.completed }} of {{ progress.total }} lessons completed
+            </small>
+        </div>
+    </div>
+
+    <div class="module-progress">
+        {% for module in modules %}
+        <div class="card mb-3">
+            <div class="card-header">
+                <h5>{{ module.title }}</h5>
+                <span class="badge bg-primary">
+                    {{ module.completed_lessons }}/{{ module.lesson_set.count }} completed
+                </span>
+            </div>
+            <div class="card-body">
+                <div class="list-group">
+                    {% for lesson in module.lesson_set.all %}
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            {% if lesson in completed_lessons %}
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            {% else %}
+                            <i class="fas fa-circle-notch text-muted me-2"></i>
+                            {% endif %}
+                            {{ lesson.title }}
+                        </div>
+                        <span class="text-muted">{{ lesson.duration }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

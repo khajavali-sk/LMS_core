@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Manage Course: {{ course.title }}</h2>
+        <div class="btn-group">
+            <a href="{% url 'courses:course_edit' course.pk %}" class="btn btn-secondary">
+                <i class="fas fa-cog"></i> Settings
+            </a>
+            <a href="#" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newModuleModal">
+                <i class="fas fa-plus"></i> Add Module
+            </a>
+        </div>
+    </div>
+
+    <!-- Module Management -->
+    <div class="module-list sortable">
+        {% for module in modules %}
+        <div class="module-card card mb-3" data-module-id="{{ module.id }}">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-grip-vertical handle me-3"></i>
+                    {{ module.title }}
+                </h5>
+                <div class="btn-group">
+                    <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" 
+                            data-bs-target="#editModuleModal" data-module-id="{{ module.id }}">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <a href="#" class="btn btn-sm btn-outline-danger">
+                        <i class="fas fa-trash"></i>
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                {% if module.lesson_count > 0 %}
+                <div class="lesson-list">
+                    {% for lesson in module.lesson_set.all %}
+                    <div class="lesson-item d-flex align-items-center py-2">
+                        <i class="fas fa-grip-vertical handle me-3"></i>
+                        <div class="flex-grow-1">
+                            {{ lesson.title }} ({{ lesson.duration }})
+                        </div>
+                        <div class="btn-group">
+                            <a href="#" class="btn btn-sm btn-outline-secondary">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <a href="#" class="btn btn-sm btn-outline-danger">
+                                <i class="fas fa-trash"></i>
+                            </a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-muted">No lessons in this module</div>
+                {% endif %}
+                <button class="btn btn-sm btn-light mt-3" data-bs-toggle="modal" 
+                        data-bs-target="#newLessonModal" data-module-id="{{ module.id }}">
+                    <i class="fas fa-plus"></i> Add Lesson
+                </button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Modals -->
+<div class="modal fade" id="newModuleModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" action="{% url 'courses:create_module' course.pk %}">
+                <div class="modal-header">
+                    <h5 class="modal-title">Create New Module</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    {% csrf_token %}
+                    {{ module_form.as_p }}
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">Create Module</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Implement drag-and-drop ordering
+new Sortable(document.querySelector('.sortable'), {
+    handle: '.handle',
+    animation: 150,
+    onUpdate: function(evt) {
+        const order = Array.from(evt.from.children).map((item, index) => ({
+            id: item.dataset.moduleId,
+            order: index + 1
+        }));
+        
+        fetch("{% url 'courses:update_order' %}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({order: order})
+        });
+    }
+});
+</script>
+{% endblock %}
