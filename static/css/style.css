@@ -1,44 +1,204 @@
-/* Custom styles for the event platform */
+/*  Professional Blue & White Theme */
+:root {
+    --primary-color: #007BFF; /* Professional Blue */
+    --secondary-color: #0056b3; /* Darker Blue */
+    --accent-color: #ffffff; /* Clean White */
+    --bg-color: #f4f7fc; /* Light Blue-White */
+    --glass-bg: rgba(255, 255, 255, 0.6); /* Glass effect */
+    --border-glow: rgba(0, 123, 255, 0.6);
+    --text-color: #333;
+    --hover-glow: rgba(0, 123, 255, 0.8);
+}
+
+/*  Global Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
 body {
-    background-color: #f8f9fa;
+    font-family: 'Poppins', sans-serif;
+    background: var(--bg-color);
+    color: var(--text-color);
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
 }
 
-.navbar {
-    margin-bottom: 20px;
+/*  Animated Background */
+@keyframes gradientMove {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
 }
 
+body::before {
+    content: "";
+    position: fixed;
+    width: 100%;
+    height: 100vh;
+    background: linear-gradient(270deg, #eef4fc, #d6e4ff, #c2d9ff, #eef4fc);
+    background-size: 400% 400%;
+    animation: gradientMove 15s infinite alternate ease-in-out;
+    opacity: 0.5;
+    z-index: -1;
+}
+
+/*  Glassmorphism Cards */
 .card {
-    margin-bottom: 20px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    background: var(--glass-bg);
+    border-radius: 15px;
+    padding: 20px;
+    backdrop-filter: blur(20px);
+    border: 2px solid var(--border-glow);
+    box-shadow: 0 0 10px var(--border-glow);
+    transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+    position: relative;
 }
 
-.alert {
-    margin-top: 20px;
-}
-
-.btn-primary {
-    background-color: #007bff;
-    border-color: #007bff;
-}
-
-.btn-secondary {
-    background-color: #6c757d;
-    border-color: #6c757d;
-}
-
-.form-group {
-    margin-bottom: 15px;
-}
-
-
-body {
-    background-color: #f8f9fa;
-}
-
-.course-card {
-    transition: transform 0.2s;
-}
-
-.course-card:hover {
+/*  Card Hover Effect */
+.card:hover {
     transform: translateY(-5px);
+    box-shadow: 0 0 25px var(--hover-glow);
+}
+
+/* Card Titles & Content */
+.card h2, .card h3, .card p {
+    color: var(--text-color);
+}
+
+/*  Card Overlay for Visibility */
+.card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 15px;
+    z-index: -1;
+}
+
+/*  Professional Buttons */
+.btn {
+    border-radius: 8px;
+    padding: 12px 24px;
+    font-weight: bold;
+    text-transform: uppercase;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    transition: all 0.3s ease-in-out;
+    position: relative;
+    overflow: hidden;
+}
+
+/*  Primary Button */
+.btn-primary {
+    background: var(--primary-color);
+    color: #fff;
+    box-shadow: 0 0 10px var(--border-glow);
+}
+
+.btn-primary:hover {
+    background: var(--accent-color);
+    color: var(--primary-color);
+    box-shadow: 0 0 20px var(--hover-glow);
+}
+
+/*  Secondary Button */
+.btn-secondary {
+    background: var(--secondary-color);
+    color: #fff;
+    box-shadow: 0 0 10px var(--border-glow);
+}
+
+.btn-secondary:hover {
+    background: var(--accent-color);
+    color: var(--secondary-color);
+    box-shadow: 0 0 20px var(--hover-glow);
+}
+
+/*  Modern Form Inputs */
+input, textarea {
+    width: 100%;
+    padding: 12px;
+    margin: 8px 0;
+    border: 2px solid var(--primary-color);
+    background: rgba(255, 255, 255, 0.8);
+    color: var(--text-color);
+    border-radius: 5px;
+    outline: none;
+    transition: all 0.3s ease-in-out;
+    font-size: 16px;
+}
+
+input:focus, textarea:focus {
+    border-color: var(--secondary-color);
+    box-shadow: 0 0 10px var(--hover-glow);
+}
+
+/*  Navbar */
+.navbar {
+    background: rgba(255, 255, 255, 0.9) !important;
+    box-shadow: 0 0 10px var(--primary-color);
+    backdrop-filter: blur(10px);
+}
+
+.navbar a {
+    color: var(--primary-color) !important;
+    transition: color 0.3s ease-in-out;
+}
+
+.navbar a:hover {
+    color: var(--secondary-color) !important;
+}
+
+/*  Video Animation */
+.video-container {
+    position: relative;
+    overflow: hidden;
+    border-radius: 12px;
+    box-shadow: 0 0 15px var(--primary-color);
+    transition: transform 0.3s ease-in-out;
+}
+
+.video-container:hover {
+    transform: scale(1.05);
+}
+
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.page-content {
+    animation: fadeIn 0.8s ease-in-out;
+}
+
+
+footer {
+    text-align: center;
+    padding: 15px;
+    background: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 0 10px var(--primary-color);
+    color: var(--primary-color);
+    font-weight: bold;
+    font-size: 18px;
+}
+
+
+.navbar form .btn-link {
+    color: var(--primary-color) !important;
+    font-weight: bold;
+    text-transform: uppercase;
+    padding: 8px 16px;
+    border-radius: 5px;
+    transition: all 0.3s ease-in-out;
+    text-decoration: none;
+}
+
+.navbar form .btn-link:hover {
+    color: var(--secondary-color) !important;
+    text-decoration: underline;
 }

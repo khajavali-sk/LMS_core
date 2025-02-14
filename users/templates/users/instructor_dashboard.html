@@ -2,20 +2,20 @@
 
 {% block content %}
 <div class="container mt-4">
-  <h2>Instructor Dashboard</h2>
-  <h4>Your Courses</h4>
-  {% for course in courses %}
-    <div class="card mb-3">
-      <div class="card-body">
-        <h5 class="card-title">{{ course.title }}</h5>
-        <p class="card-text">Enrollments: {{ course.total_enrollments }}</p>
-        <p class="card-text">Average Progress: {{ course.avg_progress|floatformat:2 }}%</p>
-        <a href="{% url 'course_analytics' course.id %}" class="btn btn-info">View Analytics</a>
-      </div>
-    </div>
-  {% empty %}
-    <p>You haven't created any courses yet.</p>
-  {% endfor %}
-  <p>Total Students: {{ total_students }}</p>
+    <h2>Instructor Dashboard</h2>
+
+    <a href="{% url 'courses:create_course' %}" class="btn btn-primary">+ Create New Course</a>
+
+    <h3 class="mt-4">Your Courses</h3>
+    <ul class="list-group">
+        {% for course in courses %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                {{ course.title }}
+                <a href="{% url 'courses:course_detail' course.id %}" class="btn btn-sm btn-info">View</a>
+            </li>
+        {% empty %}
+            <p>You haven't created any courses yet.</p>
+        {% endfor %}
+    </ul>
 </div>
 {% endblock %}

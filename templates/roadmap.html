@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roadmaps</title>
+    <style>
+        /* Global Styles */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f9f9f9;
+        }
+
+        /* Header */
+        .header {
+            background-color: #0162ff;
+            color: white;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .header h1 {
+            font-size: 36px;
+            margin: 0;
+        }
+
+        .header p {
+            font-size: 18px;
+            margin-top: 10px;
+        }
+
+        /* Roadmaps Section */
+        .roadmaps-section {
+            display: grid;
+            grid-template-columns: 1fr; /* Default to 1 column */
+            gap: 30px;
+            padding: 40px;
+            background-color: #ffffff;
+            max-width: 1200px;
+            margin: 0 auto; /* Center the content */
+        }
+
+        @media (min-width: 768px) {
+            .roadmaps-section {
+                grid-template-columns: 1fr 1fr; /* 2 columns for medium screens */
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .roadmaps-section {
+                grid-template-columns: 1fr 1fr 1fr 1fr; /* 4 columns for large screens */
+            }
+        }
+
+        .roadmap-container {
+            background-color: #f0f0f0;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .roadmap-container:hover {
+            transform: translateY(-10px); /* Slight lift effect on hover */
+        }
+
+        .roadmap-title {
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .roadmap-description {
+            font-size: 16px;
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .roadmap-img {
+            width: 100%;
+            height: 200px; /* Fixed height for uniformity */
+            object-fit: cover; /* Ensures images are fully visible without distortion */
+            border-radius: 8px;
+            margin-bottom: 15px;
+            cursor: pointer; /* Indicate that it's clickable */
+        }
+
+        /* Modal (Full-size Image) */
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed;
+            z-index: 1; /* Sit on top */
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8); /* Black with transparency */
+            justify-content: center;
+            align-items: center;
+            overflow: hidden; /* Prevent scrolling */
+        }
+
+        .modal-content {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        .modal-content img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain; /* Ensure the image is fully visible without distortion */
+        }
+
+        .close {
+            position: absolute;
+            top: 10px;
+            right: 25px;
+            color: #fff;
+            font-size: 40px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: #bbb;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        /* Footer */
+        .footer {
+            background-color: #333;
+            color: white;
+            text-align: center;
+            padding: 10px;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+        }
+
+        .footer p {
+            margin: 0;
+        }
+
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>Explore Roadmaps</h1>
+        <p>Get a structured guide to mastering various fields</p>
+    </header>
+
+    <!-- Roadmaps Section -->
+    <section class="roadmaps-section">
+        <div class="roadmap-container">
+            <h2 class="roadmap-title">Data Science Roadmap</h2>
+            <p class="roadmap-description">A comprehensive guide to learning Data Science, from basic programming to advanced machine learning techniques.</p>
+            <img src="https://www.onlinemanipal.com/wp-content/uploads/2022/08/Data-Science-roadmap-1-2048x1247.png" alt="Data Science Roadmap" class="roadmap-img" onclick="openModal(this)">
+        </div>
+
+        <div class="roadmap-container">
+            <h2 class="roadmap-title">Web Development Roadmap</h2>
+            <p class="roadmap-description">A step-by-step guide to becoming a proficient web developer, from front-end to back-end technologies.</p>
+            <img src="https://i.pinimg.com/originals/b1/eb/05/b1eb05952dd738a58ef60fe53a5da59d.jpg" alt="Web Development Roadmap" class="roadmap-img" onclick="openModal(this)">
+        </div>
+
+        <div class="roadmap-container">
+            <h2 class="roadmap-title">Machine Learning Roadmap</h2>
+            <p class="roadmap-description">Learn the path to becoming a Machine Learning expert, covering algorithms, tools, and real-world applications.</p>
+            <img src="https://i.pinimg.com/originals/43/40/83/4340839b6a9a42f5cc7dde21d04719cd.jpg" alt="Machine Learning Roadmap" class="roadmap-img" onclick="openModal(this)">
+        </div>
+
+        <div class="roadmap-container">
+            <h2 class="roadmap-title">Artificial Intelligence Roadmap</h2>
+            <p class="roadmap-description">Master the concepts and techniques in AI, including neural networks, deep learning, and natural language processing.</p>
+            <img src="https://res.cloudinary.com/practicaldev/image/fetch/s--izW0t25d--/c_limit%2Cf_auto%2Cfl_progressive%2Cq_auto%2Cw_800/https://dev-to-uploads.s3.amazonaws.com/uploads/articles/pg71otammqhs0qzvats6.jpg" alt="AI Roadmap" class="roadmap-img" onclick="openModal(this)">
+        </div>
+    </section>
+
+    <!-- Modal -->
+    <div id="modal" class="modal">
+        <span class="close" id="close-btn">&times;</span>
+        <div class="modal-content">
+            <img id="modal-img" src="" alt="Full-size Image">
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>&copy; 2025 Roadmap Guide. All rights reserved.</p>
+    </footer>
+
+    <script>
+        // Function to open the modal and display the clicked image
+        function openModal(imgElement) {
+            const modal = document.getElementById("modal");
+            const modalImg = document.getElementById("modal-img");
+            modal.style.display = "flex"; // Show the modal
+            modalImg.src = imgElement.src; // Set the modal image to the clicked image
+        }
+
+        // Function to close the modal
+        function closeModal() {
+            const modal = document.getElementById("modal");
+            modal.style.display = "none"; // Hide the modal
+        }
+
+        // Ensure modal closes when 'X' button is clicked
+        const closeBtn = document.getElementById("close-btn");
+        closeBtn.onclick = closeModal;
+
+        // Close modal if clicked outside of the image
+        window.onclick = function(event) {
+            const modal = document.getElementById("modal");
+            if (event.target === modal) {
+                closeModal();
+            }
+        };
+    </script>
+</body>
+</html>

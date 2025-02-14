@@ -150,3 +150,47 @@ def course_lessons(request, course_id):
     }
     return render(request, 'courses/course_lessons.html', context)
 
+
+
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required
+from django.http import HttpResponseForbidden
+from .models import Course
+from .forms import CourseForm
+
+# ✅ View: Instructor Dashboard
+@login_required
+def instructor_dashboard(request):
+    if request.user.role != 'INSTRUCTOR':
+        return HttpResponseForbidden("Access Denied")
+
+    courses = Course.objects.filter(instructor=request.user)
+    return render(request, 'users/instructor_dashboard.html', {'courses': courses})
+
+# ✅ View: Create Course
+@login_required
+def create_course(request):
+    if request.user.role != 'INSTRUCTOR':
+        return HttpResponseForbidden("Access Denied")
+
+    if request.method == 'POST':
+        form = CourseForm(request.POST, request.FILES)
+        if form.is_valid():
+            course = form.save(commit=False)
+            course.instructor = request.user
+            course.is_published = False  # Default to draft
+            course.save()
+            return redirect('courses:manage_courses')
+    else:
+        form = CourseForm()
+
+    return render(request, 'courses/create_course.html', {'form': form})
+
+# ✅ View: Manage Courses
+@login_required
+def manage_courses(request):
+    if request.user.role != 'INSTRUCTOR':
+        return HttpResponseForbidden("Access Denied")
+
+    courses = Course.objects.filter(instructor=request.user)
+    return render(request, 'courses/manage_courses.html', {'courses': courses})

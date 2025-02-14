@@ -109,21 +109,19 @@ def learner_dashboard(request):
     }
     return render(request, 'users/learner_dashboard.html', context)
 
+from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
+from django.http import HttpResponseForbidden
+from courses.models import Course
+
 @login_required
 def instructor_dashboard(request):
     if request.user.role != 'INSTRUCTOR':
-        return HttpResponseForbidden()
-    
-    courses = Course.objects.filter(instructor=request.user).annotate(
-        total_enrollments=Count('enrollment'),
-        avg_progress=Avg(
-            Case(
-                When(enrollment__user__userprogress__lesson__module__course=OuterRef('pk'), then=Value(1)),
-                default=Value(0),
-                output_field=IntegerField()
-            )
-        )
-    )
+        return HttpResponseForbidden("Access Denied")
+
+    courses = Course.objects.filter(instructor=request.user)
+    return render(request, 'users/instructor_dashboard.html', {'courses': courses})
+
     
     context = {
         'courses': courses,
