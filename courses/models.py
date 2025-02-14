@@ -1,17 +1,10 @@
 from django.db import models
-
-# Create your models here.
-from django.db import models
-from users.models import User
-
-from django.db import models
 from users.models import User
 
 class Course(models.Model):
     title = models.CharField(max_length=200)
     description = models.TextField()
-    # Added category field for filtering purposes
-    category = models.CharField(max_length=100, blank=True)
+    category = models.CharField(max_length=100, blank=True)  # For filtering purposes
     instructor = models.ForeignKey(
         User, 
         on_delete=models.CASCADE, 
@@ -25,8 +18,6 @@ class Course(models.Model):
     def __str__(self):
         return self.title
 
-# (Other models like Module, Lesson, UserProgress remain unchanged)
-
 
 class Module(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
@@ -35,6 +26,7 @@ class Module(models.Model):
 
     class Meta:
         ordering = ['order']
+
 
 class Lesson(models.Model):
     module = models.ForeignKey(Module, on_delete=models.CASCADE)
@@ -47,7 +39,6 @@ class Lesson(models.Model):
 
     class Meta:
         ordering = ['order']
-
 
 
 class UserProgress(models.Model):
@@ -63,11 +54,9 @@ class UserProgress(models.Model):
     def get_course_progress(user, course):
         total_lessons = Lesson.objects.filter(module__course=course).count()
         completed_lessons = UserProgress.objects.filter(user=user, lesson__module__course=course).count()
-
         if total_lessons == 0:
             return 0  # Avoid division by zero
-
-        return int((completed_lessons / total_lessons) * 100)  # Convert to percentage
+        return int((completed_lessons / total_lessons) * 100)  # Percentage
 
 
 class Enrollment(models.Model):

@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2>{{ lesson.title }}</h2>
+  <div>
+    {{ lesson.content|safe }}
+  </div>
+  
+  {% if quiz %}
+  <a href="{% url 'quizzes:take_quiz' quiz.id %}" class="btn btn-secondary mt-3">Take Quiz</a>
+
+  {% endif %}
+  
+  {% if next_lesson %}
+  <a href="{% url 'courses:lesson_view' next_lesson.id %}" class="btn btn-primary mt-3">Next Lesson</a>
+
+  {% endif %}
+</div>
+{% endblock %}

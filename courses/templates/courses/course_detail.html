@@ -2,34 +2,32 @@
 
 {% block content %}
 <div class="container mt-4">
-    <!-- Course Header -->
-    <div class="row mb-4">
-        <div class="col-md-4">
-            {% if course.thumbnail %}
-                <img src="{{ course.thumbnail.url }}" alt="{{ course.title }}" class="img-fluid rounded">
-            {% endif %}
-        </div>
-        <div class="col-md-8">
-            <h1>{{ course.title }}</h1>
-            <p class="lead">{{ course.description }}</p>
-            <p>
-                <strong>Category:</strong> {{ course.category }} <br>
-                <strong>Instructor:</strong> {{ course.instructor.username }}
-            </p>
-        </div>
+  <h2>{{ course.title }}</h2>
+  <p>{{ course.description }}</p>
+  
+  <!-- Enrollment Section -->
+  {% if not is_enrolled %}
+    <form action="{% url 'courses:enroll_course' course.id %}" method="post">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-primary">Enroll Now</button>
+    </form>
+  {% else %}
+    <p class="text-success">You are enrolled in this course!</p>
+  {% endif %}
+  
+  <!-- Progress Bar (only if enrolled) -->
+  {% if is_enrolled %}
+    <h4>Your Progress</h4>
+    <div class="progress mb-3">
+      <div class="progress-bar" role="progressbar" style="width: {{ progress }}%;" aria-valuenow="{{ progress }}" aria-valuemin="0" aria-valuemax="100">
+        {{ progress }}%
+      </div>
     </div>
-
-    <!-- Lessons List -->
-    <h3>Lessons</h3>
-    <ul class="list-group">
-        {% for lesson in lessons %}
-            <li class="list-group-item d-flex justify-content-between align-items-center">
-                <span>{{ lesson.title }}</span>
-                <a href="{% url 'courses:lesson_detail' lesson.id %}" class="btn btn-sm btn-primary">View Lesson</a>
-            </li>
-        {% empty %}
-            <li class="list-group-item">No lessons available for this course.</li>
-        {% endfor %}
-    </ul>
+  {% endif %}
+  
+  <!-- Enrollment Count -->
+  <p>Total Enrollments: {{ enrollment_count }}</p>
+  
+  <!-- (Optional) List modules/lessons here -->
 </div>
 {% endblock %}

@@ -1,44 +1,24 @@
-from django.shortcuts import render,get_object_or_404,redirect
+from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
-from .models import Course
-from django.http import HttpResponseForbidden, HttpResponse
-from courses.models import Course, UserProgress
+from django.http import HttpResponseForbidden
+from django.contrib import messages
+from django.utils import timezone
+from datetime import timedelta
+from django.urls import reverse
+from django.db.models import Count, Avg, Case, When, Value, IntegerField, ExpressionWrapper, Subquery
+
+from .models import Course, Lesson, Enrollment, UserProgress
 from quizzes.models import Quiz
-from django.utils.timezone import now 
-from datetime import timedelta, timezone
-from django.db.models import Case, When, Value, IntegerField, Avg, Count, OuterRef, ExpressionWrapper, Subquery
 
-
-@login_required
-def enroll_course(request, course_id):
-    course = get_object_or_404(Course, id=course_id)
-    if request.user.role != 'STUDENT':
-        return HttpResponseForbidden()
-    # Add payment integration here (Stripe/Razorpay)
-    request.user.enrolled_courses.add(course)
-    return redirect('course_detail', course_id=course.id)
-
-
-
-
-from django.shortcuts import render
-from django.contrib.auth.decorators import login_required
-from .models import Course
-
+# Home view: Lists courses with optional category filtering
 @login_required
 def home(request):
-    # Get the category from the query string (if any)
     selected_category = request.GET.get('category', '')
-
-    # Filter courses if a category is selected; otherwise, return all published courses
     if selected_category:
         courses = Course.objects.filter(category=selected_category, is_published=True)
     else:
         courses = Course.objects.filter(is_published=True)
-    
-    # Get distinct categories from all courses
     categories = Course.objects.values_list('category', flat=True).distinct()
-
     context = {
         'courses': courses,
         'categories': categories,
@@ -46,32 +26,12 @@ def home(request):
     }
     return render(request, 'courses/home.html', context)
 
-
-
-# courses/views.py
-from django.shortcuts import render, get_object_or_404
-from django.contrib.auth.decorators import login_required
-from .models import Course, Lesson
-
-# @login_required
-# def course_detail(request, course_id):
-#     course = get_object_or_404(Course, id=course_id)
-#     lessons = course.lesson_set.all().order_by('order')
-#     return render(request, 'courses/course_detail.html', {
-#         'course': course,
-#         'lessons': lessons
-#     })
-
-
-from django.contrib import messages
-from .models import Course, Enrollment
-
+# Course detail: Shows course information, enrollment status, and progress bar
 @login_required
 def course_detail(request, course_id):
     course = get_object_or_404(Course, id=course_id)
     is_enrolled = Enrollment.objects.filter(user=request.user, course=course).exists()
     progress = UserProgress.get_course_progress(request.user, course)
-    
     context = {
         'course': course,
         'is_enrolled': is_enrolled,
@@ -80,39 +40,30 @@ def course_detail(request, course_id):
     }
     return render(request, 'courses/course_detail.html', context)
 
+# Enroll in a course (includes dummy premium check)
 @login_required
 def enroll_course(request, course_id):
     course = get_object_or_404(Course, id=course_id)
     
     if request.method == 'POST':
-        if course.price > 0 and not request.user.is_premium:
-            messages.warning(request, "Premium course requires subscription")
-            return redirect('payment_page')
-            
+        # Dummy check: if course costs > 0 and user is not premium, redirect to payment
+        if course.price > 0 and not getattr(request.user, 'is_premium', False):
+            messages.warning(request, "This course requires a premium subscription. Please make a payment first.")
+            # Redirect with course_id as a query parameter
+            return redirect(f"{reverse('courses:payment_page')}?course_id={course.id}")
+        
         Enrollment.objects.get_or_create(user=request.user, course=course)
-        messages.success(request, "Successfully enrolled in course!")
-        return redirect('course_detail', course_id=course.id)
+        messages.success(request, "Successfully enrolled in the course!")
+        return redirect('courses:course_detail', course_id=course.id)
     
-    return redirect('course_list')
+    return redirect('courses:home')
 
-@login_required
-def lesson_detail(request, lesson_id):
-    lesson = get_object_or_404(Lesson, id=lesson_id)
-    return render(request, 'courses/lesson_detail.html', {'lesson': lesson})
-
-
-
-# @login_required
-# def home(request):
-#     courses = Course.objects.all()
-#     return render(request, 'courses/home.html', {'courses': courses})
-
-
+# Lesson view: Marks lesson as completed; shows next lesson and quiz if available
 @login_required
 def lesson_view(request, lesson_id):
     lesson = get_object_or_404(Lesson, id=lesson_id)
     course = lesson.module.course
-    
+
     if not Enrollment.objects.filter(user=request.user, course=course).exists():
         return HttpResponseForbidden("You're not enrolled in this course")
     
@@ -136,30 +87,66 @@ def lesson_view(request, lesson_id):
     }
     return render(request, 'courses/lesson_view.html', context)
 
-
+# Course analytics: For instructors to view enrollments and average progress
 @login_required
 def course_analytics(request, course_id):
     course = get_object_or_404(Course, id=course_id, instructor=request.user)
+    total_enrollments = course.enrollment_set.count()
+
+    # Calculate average progress across enrolled students
+    all_progress = [
+        UserProgress.get_course_progress(enrollment.user, course)
+        for enrollment in course.enrollment_set.all()
+    ]
+    avg_progress = sum(all_progress) / len(all_progress) if all_progress else 0
+
+    context = {
+        'course': course,
+        'enrollments': total_enrollments,
+        'avg_progress': avg_progress,
+    }
+    return render(request, 'courses/course_analytics.html', context)
+
+# Dummy Payment Page: Simulate payment success and enroll the user
+@login_required
+def payment_page(request):
+    # Retrieve course_id from query parameters (e.g., ?course_id=1)
+    course_id = request.GET.get('course_id')
+    if not course_id:
+        messages.error(request, "No course specified for payment.")
+        return redirect('courses:home')
     
-    # Progress distribution
-    progress_data = UserProgress.objects.filter(
-        lesson__module__course=course
-    ).values('user').annotate(
-        progress=ExpressionWrapper(
-            Count('lesson') * 100 / Subquery(
-                Lesson.objects.filter(module__course=course).values('module__course').annotate(
-                    total=Count('id')).values('total')
-            ),
-            output_field=IntegerField()
-        )
-    )
+    course = get_object_or_404(Course, id=course_id)
+    
+    if request.method == 'POST':
+        # Simulate payment success: mark user as premium and enroll them
+        request.user.is_premium = True
+        request.user.save()
+        Enrollment.objects.get_or_create(user=request.user, course=course)
+        messages.success(request, "Payment successful! You are now enrolled in the course.")
+        return redirect('courses:course_detail', course_id=course.id)
+    
+    return render(request, 'courses/payment_page.html', {'course': course})
+
+
+
+# Existing imports and views ...
+
+# New: Course Lessons View - Lists lessons for an enrolled course
+@login_required
+def course_lessons(request, course_id):
+    course = get_object_or_404(Course, id=course_id)
+    
+    # Ensure the user is enrolled in the course
+    if not Enrollment.objects.filter(user=request.user, course=course).exists():
+        return HttpResponseForbidden("You're not enrolled in this course")
+    
+    # Get lessons through modules
+    lessons = Lesson.objects.filter(module__course=course).order_by('order')
     
     context = {
         'course': course,
-        'enrollments': course.enrollment_set.count(),
-        'completion_rate': course.userprogress_set.filter(
-            lesson__module__course=course
-        ).values('user').distinct().count(),
-        'progress_distribution': progress_data
+        'lessons': lessons,
     }
-    return render(request, 'courses/course_analytics.html', context)
+    return render(request, 'courses/course_lessons.html', context)
+

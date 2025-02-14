@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2>Lessons for {{ course.title }}</h2>
+  <ul class="list-group">
+    {% for lesson in lessons %}
+      <li class="list-group-item d-flex justify-content-between align-items-center">
+        {{ lesson.title }}
+        <!-- Link to view the lesson; adjust if you have additional lesson view logic -->
+        <a href="{% url 'courses:lesson_view' lesson.id %}" class="btn btn-sm btn-primary">Start Lesson</a>
+      </li>
+    {% empty %}
+      <li class="list-group-item">No lessons available for this course.</li>
+    {% endfor %}
+  </ul>
+  <a href="{% url 'courses:course_detail' course.id %}" class="btn btn-secondary mt-3">Back to Course Details</a>
+</div>
+{% endblock %}
